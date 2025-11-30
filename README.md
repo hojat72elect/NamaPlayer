@@ -4,3 +4,15 @@ My goal with this project is to make a multiplatform video player which can be a
 and other players. 
 
 It needs to have some features that convinces users to pay for its subscription.
+
+-----
+
+Some possible features we could add in order to stand out of competition. 
+
+<ol>
+<li></li>
+<li></li>
+<li></li>
+<li></li>
+<li></li>
+</ol>
