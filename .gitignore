@@ -46,7 +46,6 @@ bin/
 .DS_Store
 
 ### VLC Native Libraries ###
-# Exclude VLC binaries (large files, should be downloaded separately)
 libs/vlc/windows-x64/*.dll
 libs/vlc/windows-x64/plugins/
 libs/vlc/windows-x86/*.dll
