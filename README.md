@@ -1,0 +1,1 @@
+I plan to make this a viable and good video player for desktop (or maybe even mobile).
