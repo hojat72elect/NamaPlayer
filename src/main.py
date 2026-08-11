@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 from PIL import Image, ImageTk
-from ffpyplayer.player import MediaPlayer
+import cv2
 
 root = tk.Tk()
 root.title("NamaPlayer")
@@ -22,12 +22,11 @@ def open_file():
         return
 
     if player:
-        player.close_player()
+        player.release()
         if after_id:
             video_label.after_cancel(after_id)
 
-    ff_opts = {'out_fmt': 'rgb24'}
-    player = MediaPlayer(filepath, ff_opts=ff_opts)
+    player = cv2.VideoCapture(filepath)
     update_video()
 
 
@@ -36,28 +35,23 @@ def update_video():
     if not player:
         return
 
-    frame, val = player.get_frame()
+    ret, frame = player.read()
 
-    if val == 'eof':
-        player.close_player()
+    if not ret:
+        player.release()
         player = None
         return
 
-    delay = 1
-    if frame is not None:
-        img, t = frame
+    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    h, w = frame_rgb.shape[:2]
+    pil_img = Image.frombytes("RGB", (w, h), frame_rgb.tobytes())
 
-        w, h = img.get_size()
-        img_data = img.to_bytearray()[0]
-        pil_img = Image.frombytes("RGB", (w, h), bytes(img_data))
+    img_tk = ImageTk.PhotoImage(image=pil_img)
+    video_label.config(image=img_tk)
+    video_label.image = img_tk
 
-        img_tk = ImageTk.PhotoImage(image=pil_img)
-        video_label.config(image=img_tk)
-        video_label.image = img_tk
-    else:
-        delay = int(val * 1000)
-        if delay == 0:
-            delay = 1
+    fps = player.get(cv2.CAP_PROP_FPS)
+    delay = int(1000 / fps) if fps > 0 else 30
 
     after_id = video_label.after(delay, update_video)
 
@@ -65,7 +59,7 @@ def update_video():
 def on_closing():
     global player
     if player:
-        player.close_player()
+        player.release()
     root.destroy()
 
 
