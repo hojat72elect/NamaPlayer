@@ -1,2 +1,0 @@
-ffpyplayer
-Pillow
