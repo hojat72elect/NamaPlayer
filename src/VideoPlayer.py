@@ -1,10 +1,10 @@
-from typing import Optional
 import mpv
+
 
 class VideoPlayer:
 
     def __init__(self):
-        self.player: Optional[mpv.MPV] = None
+        self.player: mpv.MPV | None = None
 
     def open_file(self) -> bool:
         try:
