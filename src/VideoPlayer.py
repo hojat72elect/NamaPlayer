@@ -2,7 +2,7 @@ import os
 from typing import Optional
 from PIL import Image
 
-# Configure mpv path before importing
+# Before importing, we have to load MPV dlls into our environment
 mpv_path = r"D:\Apps\mpv"
 if os.path.exists(mpv_path):
     os.add_dll_directory(mpv_path)
@@ -12,13 +12,11 @@ import mpv
 
 
 class VideoPlayer:
-    """Takes care of video and audio playback using mpv."""
 
     def __init__(self):
         self.player: Optional[mpv.MPV] = None
 
     def open_file(self, filepath: str) -> bool:
-        """Open a video file for playback."""
         try:
             self.stop()
 
@@ -60,10 +58,10 @@ class VideoPlayer:
             self.player.terminate()
             self.player = None
 
-    def set_hwnd(self, hwnd: int):
+    def set_handle(self, window_id: int):
         """Set the window handle for video rendering."""
         if self.player:
-            self.player.wid = str(hwnd)
+            self.player.wid = str(window_id)
 
     def get_time(self) -> int:
         """Get current playback position in milliseconds."""
