@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import filedialog
 from VideoPlayer import VideoPlayer
 
-
 class PlayerUI:
     """Controls the UI of the player."""
 
@@ -25,7 +24,7 @@ class PlayerUI:
         if not filepath:
             return
 
-        if self.player.open_file(filepath):
+        if self.player.open_file():
             # Get the window handle for the video frame
             self.root.update_idletasks()
             window_handle = self.video_frame.winfo_id()

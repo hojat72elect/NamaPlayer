@@ -1,19 +1,24 @@
 __version__ = '1.0.8'
 
-from ctypes import *
-import ctypes.util
-import threading
-import queue
-import os
-import os.path
-import sys
-from warnings import warn
-from functools import partial, wraps
-from contextlib import contextmanager
-from concurrent.futures import Future, InvalidStateError
 import collections
+import ctypes.util
+import os.path
+import queue
 import re
+import sys
+import threading
 import traceback
+from concurrent.futures import Future, InvalidStateError
+from contextlib import contextmanager
+from ctypes import *
+from functools import partial, wraps
+from warnings import warn
+
+# We need to first load the dll into our environment.
+mpv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lib')
+if os.path.exists(mpv_path):
+    os.add_dll_directory(mpv_path)
+    os.environ['PATH'] = mpv_path + os.pathsep + os.environ.get('PATH', '')
 
 if os.name == 'nt':
     # Note: mpv-2.dll with API version 2 corresponds to mpv v0.35.0. Most things should work with the fallback, too.

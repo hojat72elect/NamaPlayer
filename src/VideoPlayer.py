@@ -1,12 +1,4 @@
-import os
 from typing import Optional
-
-# Before importing, we have to load MPV dlls into our environment
-mpv_path = r"D:\Apps\mpv"
-if os.path.exists(mpv_path):
-    os.add_dll_directory(mpv_path)
-    os.environ['PATH'] = mpv_path + os.pathsep + os.environ.get('PATH', '')
-
 import mpv
 
 class VideoPlayer:
@@ -14,7 +6,7 @@ class VideoPlayer:
     def __init__(self):
         self.player: Optional[mpv.MPV] = None
 
-    def open_file(self, filepath: str) -> bool:
+    def open_file(self) -> bool:
         try:
             self.stop()
 
