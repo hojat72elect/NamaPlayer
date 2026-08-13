@@ -1,22 +1,3 @@
-# -*- coding: utf-8 -*-
-# vim: ts=4 sw=4 et
-#
-# Python MPV library module
-# Copyright (C) 2017-2024 Sebastian Götte <code@jaseg.net>
-#
-# python-mpv inherits the underlying libmpv's license, which can be either GPLv2 or later (default) or LGPLv2.1 or
-# later. For details, see the mpv copyright page here: https://github.com/mpv-player/mpv/blob/master/Copyright
-#
-# You may copy, modify, and redistribute this file under the terms of the GNU General Public License version 2 (or, at
-# your option, any later version), or the GNU Lesser General Public License as published by the Free Software
-# Foundation; either version 2.1 of the License, or (at your option) any later version.
-#
-# This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License and the GNU
-# Lesser General Public License for more details.
-#
-# You can find copies of the GPLv2 and LGPLv2.1 licenses in the project repository's LICENSE.GPL and LICENSE.LGPL files.
-
 __version__ = '1.0.8'
 
 from ctypes import *
@@ -1031,7 +1012,7 @@ class MPV(object):
                         with self._enqueue_exceptions():
                             cb(EventOverflowError(
                                 'libmpv event queue has flown over because events have not been processed fast enough'),
-                               None)
+                                None)
 
                 if eid == MpvEventID.SHUTDOWN:
                     _mpv_destroy(self._event_handle)
