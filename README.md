@@ -72,16 +72,6 @@ Format code:
 uv run ruff format src/
 ```
 
-## Roadmap
-
-- [ ] Add playback controls (play/pause, seek, volume)
-- [ ] Implement playlist support
-- [ ] Add keyboard shortcuts
-- [ ] Support for subtitles
-- [ ] Windowed/fullscreen toggle
-- [ ] Settings and preferences panel
-- [ ] Recent files history
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
