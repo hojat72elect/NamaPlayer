@@ -1,63 +1,53 @@
-import tkinter as tk
-from tkinter import filedialog
-from PIL import Image, ImageTk
 import cv2
+from PIL import Image
+from typing import Optional
 
 
 class PlayerController:
     def __init__(self):
-        self.ui_root = tk.Tk()
-        self.ui_root.title("NamaPlayer")
-        self.video_label = tk.Label(self.ui_root)
-        self.video_label.pack()
+        self.player: Optional[cv2.VideoCapture] = None
 
-        self.player = None
-        self.after_id = None
-
-        open_button = tk.Button(self.ui_root, text="Open Video", command=self.open_file)
-        open_button.pack()
-
-        self.ui_root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        self.ui_root.mainloop()
-
-    def open_file(self):
-        filepath = filedialog.askopenfilename()
-        if not filepath:
-            return
-
+    def open_file(self, filepath: str) -> bool:
+        """Open a video file for playback."""
         if self.player:
             self.player.release()
-            if self.after_id:
-                self.video_label.after_cancel(self.after_id)
 
         self.player = cv2.VideoCapture(filepath)
-        self.update_video()
+        return self.player.isOpened()
 
-    def update_video(self):
+    def get_frame(self) -> Optional[Image.Image]:
+        """Read and return the next frame as a PIL Image."""
         if not self.player:
-            return
+            return None
 
         ret, frame = self.player.read()
 
         if not ret:
             self.player.release()
             self.player = None
-            return
+            return None
 
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w = frame_rgb.shape[:2]
         pil_img = Image.frombytes("RGB", (w, h), frame_rgb.tobytes())
+        return pil_img
 
-        img_tk = ImageTk.PhotoImage(image=pil_img)
-        self.video_label.config(image=img_tk)
-        self.video_label.image = img_tk
+    def get_fps(self) -> float:
+        """Get the video's frames per second."""
+        if not self.player:
+            return 0.0
+        return self.player.get(cv2.CAP_PROP_FPS)
 
-        fps = self.player.get(cv2.CAP_PROP_FPS)
-        delay = int(1_000 / fps) if fps > 0 else 30
+    def is_playing(self) -> bool:
+        """Check if a video is currently loaded and playing."""
+        return self.player is not None and self.player.isOpened()
 
-        self.after_id = self.video_label.after(delay, self.update_video)
-
-    def on_closing(self):
+    def stop(self):
+        """Stop video playback and release resources."""
         if self.player:
             self.player.release()
-        self.ui_root.destroy()
+            self.player = None
+
+    def __del__(self):
+        """Cleanup when the object is destroyed."""
+        self.stop()

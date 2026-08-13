@@ -1,4 +1,5 @@
-from PlayerController import PlayerController
+from PlayerUI import PlayerUI
 
 if __name__ == '__main__':
-    PlayerController()
+    app = PlayerUI()
+    app.run()
