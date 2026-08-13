@@ -33,6 +33,7 @@ class PlayerUI:
             self.after_id = None
 
         if self.player.open_file(filepath):
+            self.player.play_audio()
             self.update_video()
 
     def update_video(self):
