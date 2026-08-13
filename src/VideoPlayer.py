@@ -1,6 +1,5 @@
 import os
 from typing import Optional
-from PIL import Image
 
 # Before importing, we have to load MPV dlls into our environment
 mpv_path = r"D:\Apps\mpv"
@@ -9,7 +8,6 @@ if os.path.exists(mpv_path):
     os.environ['PATH'] = mpv_path + os.pathsep + os.environ.get('PATH', '')
 
 import mpv
-
 
 class VideoPlayer:
 
@@ -28,11 +26,6 @@ class VideoPlayer:
         except Exception as e:
             print(f"Error opening file: {e}")
             return False
-
-    def get_frame(self) -> Optional[Image.Image]:
-        """Get current video frame as PIL Image."""
-        # mpv handles rendering internally, so we don't manually extract frames
-        return None
 
     def get_fps(self) -> float:
         """Returns the video's frames per second."""
