@@ -1,118 +1,87 @@
-import cv2
-from PIL import Image
-from typing import Optional
-import pygame
-import tempfile
 import os
-import subprocess
-from typing import cast
+from typing import Optional
+from PIL import Image
+
+# Configure mpv path before importing
+mpv_path = r"D:\Apps\mpv"
+if os.path.exists(mpv_path):
+    os.add_dll_directory(mpv_path)
+    os.environ['PATH'] = mpv_path + os.pathsep + os.environ.get('PATH', '')
+
+import mpv
 
 
 class VideoPlayer:
-    """Takes care of video and how to play it."""
+    """Takes care of video and audio playback using mpv."""
 
     def __init__(self):
-        self.player: Optional[cv2.VideoCapture] = None
-        pygame.mixer.init()
-        self.audio_file: Optional[str] = None
-        self.temp_dir: Optional[tempfile.TemporaryDirectory] = None
+        self.player: Optional[mpv.MPV] = None
 
     def open_file(self, filepath: str) -> bool:
-        if self.player:
-            self.player.release()
+        """Open a video file for playback."""
+        try:
+            self.stop()
 
-        self.stop_audio()
-
-        self.player = cv2.VideoCapture(filepath)
-        if self.player is None:
-            return False
-        else:
-            if self.player.isOpened():
-                self.extract_audio(filepath)
-                return True
+            self.player = mpv.MPV(
+                vo='gpu',
+                ytdl=False,
+            )
+            return True
+        except Exception as e:
+            print(f"Error opening file: {e}")
             return False
 
     def get_frame(self) -> Optional[Image.Image]:
-        """Reads and returns the next frame of the video as a Pillow Image."""
-        if not self.player:
-            return None
-
-        ret, frame = self.player.read()
-
-        if not ret:
-            self.player.release()
-            self.player = None
-            return None
-
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        height, width = frame_rgb.shape[:2]
-        pillow_image = Image.frombytes("RGB", (width, height), frame_rgb.tobytes())
-        return pillow_image
+        """Get current video frame as PIL Image."""
+        # mpv handles rendering internally, so we don't manually extract frames
+        return None
 
     def get_fps(self) -> float:
         """Returns the video's frames per second."""
-        if not self.player:
-            return 0.0
-        return self.player.get(cv2.CAP_PROP_FPS)
+        return 30.0
 
     def is_playing(self) -> bool:
-        return self.player is not None and self.player.isOpened()
+        """Check if media is currently playing."""
+        return self.player is not None
 
-    def extract_audio(self, filepath: str):
-        """Extract audio from video file to a temporary WAV file using ffmpeg."""
-        try:
-            if self.temp_dir:
-                self.temp_dir.cleanup()
+    def play(self, filepath: str):
+        """Start playback."""
+        if self.player:
+            self.player.play(filepath)
 
-            self.temp_dir = tempfile.TemporaryDirectory()
-            audio_path = os.path.join(self.temp_dir.name, "audio.wav")
-
-            # Use ffmpeg to extract audio
-            command = [
-                'ffmpeg',
-                '-i', filepath,
-                '-vn',
-                '-acodec', 'pcm_s16le',
-                '-ar', '44100',
-                '-ac', '2',
-                audio_path,
-                '-y'
-            ]
-
-            result = subprocess.run(command, capture_output=True, text=True)
-
-            if result.returncode == 0 and os.path.exists(audio_path):
-                self.audio_file = audio_path
-            else:
-                self.audio_file = None
-        except FileNotFoundError:
-            print("ffmpeg not found. Please install ffmpeg to enable audio playback.")
-            self.audio_file = None
-        except Exception as e:
-            print(f"Error extracting audio: {e}")
-            self.audio_file = None
-
-    def play_audio(self):
-        """Start playing the audio track."""
-        if self.audio_file and os.path.exists(self.audio_file):
-            pygame.mixer.music.load(self.audio_file)
-            pygame.mixer.music.play()
-
-    def stop_audio(self):
-        """Stop audio playback and clean up temporary files."""
-        pygame.mixer.music.stop()
-        if self.temp_dir:
-            self.temp_dir.cleanup()
-            self.temp_dir = None
-        self.audio_file = None
+    def pause(self):
+        """Pause playback."""
+        if self.player:
+            self.player.pause = True
 
     def stop(self):
-        """Stop video playback and release resources."""
+        """Stop playback and release resources."""
         if self.player:
-            self.player.release()
+            self.player.terminate()
             self.player = None
-        self.stop_audio()
+
+    def set_hwnd(self, hwnd: int):
+        """Set the window handle for video rendering."""
+        if self.player:
+            self.player.wid = str(hwnd)
+
+    def get_time(self) -> int:
+        """Get current playback position in milliseconds."""
+        if self.player:
+            return int(self.player.time_pos * 1000) if self.player.time_pos else 0
+        return 0
+
+    def set_time(self, time_ms: int):
+        """Set playback position in milliseconds."""
+        if self.player:
+            self.player.time_pos = time_ms / 1000.0
+
+    def get_length(self) -> int:
+        """Get media length in milliseconds."""
+        if self.player:
+            return int(self.player.duration * 1000) if self.player.duration else 0
+        return 0
 
     def __del__(self):
-        """Cleanup just in case if an instance of this object was destroyed."""
+        """Cleanup on destruction."""
         self.stop()
