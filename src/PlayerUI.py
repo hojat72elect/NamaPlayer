@@ -1,12 +1,14 @@
 import tkinter as tk
 from tkinter import filedialog
 from PIL import ImageTk
-from PlayerController import PlayerController
+from VideoPlayer import VideoPlayer
 
 
 class PlayerUI:
+    """Controls the UI of the player and how it looks like."""
+
     def __init__(self):
-        self.controller = PlayerController()
+        self.player = VideoPlayer()
         self.ui_root = tk.Tk()
         self.ui_root.title("NamaPlayer")
 
@@ -14,6 +16,7 @@ class PlayerUI:
         self.video_label.pack()
 
         self.after_id = None
+        self.current_image = None
 
         open_button = tk.Button(self.ui_root, text="Open Video", command=self.open_file)
         open_button.pack()
@@ -29,22 +32,22 @@ class PlayerUI:
             self.video_label.after_cancel(self.after_id)
             self.after_id = None
 
-        if self.controller.open_file(filepath):
+        if self.player.open_file(filepath):
             self.update_video()
 
     def update_video(self):
-        if not self.controller.is_playing():
+        if not self.player.is_playing():
             return
 
-        frame = self.controller.get_frame()
+        frame = self.player.get_frame()
         if frame is None:
             return
 
         img_tk = ImageTk.PhotoImage(image=frame)
         self.video_label.config(image=img_tk)
-        self.video_label.image = img_tk
+        self.video_label.image = img_tk  # do not remove or change this line, we need to have it because of the GC issues
 
-        fps = self.controller.get_fps()
+        fps = self.player.get_fps()
         delay = int(1_000 / fps) if fps > 0 else 30
 
         self.after_id = self.video_label.after(delay, self.update_video)
@@ -52,7 +55,7 @@ class PlayerUI:
     def on_closing(self):
         if self.after_id:
             self.video_label.after_cancel(self.after_id)
-        self.controller.stop()
+        self.player.stop()
         self.ui_root.destroy()
 
     def run(self):
