@@ -11,6 +11,7 @@ class PlayerUI:
         self.player = VideoPlayer()
         self.root = tk.Tk()
         self.root.title("NamaPlayer")
+        self.user_seeking = False
 
         menu_bar = tk.Menu(self.root)
         self.root.config(menu=menu_bar)
@@ -55,9 +56,36 @@ class PlayerUI:
         else:
             self.play_pause_button.config(text="⏸")
 
+    def on_seek_start(self, _):
+        self.user_seeking = True
+
+    def on_seek_release(self, _):
+        self.user_seeking = False
+        if self.player.player:
+            duration = self.player.player.duration
+            if duration and duration > 0:
+                value = self.seek_bar.get()
+                position = (float(value) / 100) * duration
+                self.player.player.time_pos = position
+
+    def update_seek_bar(self):
+        """Update seek bar's position to match current video position."""
+        if self.player.player and not self.user_seeking:
+            try:
+                time_pos = self.player.player.time_pos
+                duration = self.player.player.duration
+                if time_pos is not None and duration is not None and duration > 0:
+                    percentage = (time_pos / duration) * 100
+                    self.seek_bar.set(percentage)
+            except Exception:
+                pass
+        # Schedule next update
+        self.root.after(100, self.update_seek_bar)
+
     def on_closing(self):
         self.player.stop()
         self.root.destroy()
 
     def run(self):
+        self.update_seek_bar()
         self.root.mainloop()
