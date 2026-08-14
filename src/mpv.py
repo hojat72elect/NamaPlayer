@@ -38,6 +38,7 @@ from core.EventOverflowError import EventOverflowError
 from core.MpvHandle import MpvHandle
 from core.MpvRenderCtxHandle import MpvRenderCtxHandle
 from core.PropertyUnavailableError import PropertyUnavailableError
+from core.Proxy import Proxy
 from core.ShutdownError import ShutdownError
 
 # We need to first load the dll into our environment.
@@ -686,17 +687,12 @@ _mpv_to_py = lambda name: name.replace("-", "_")
 _drop_nones = lambda *args: [arg for arg in args if arg is not None]
 
 
-class _Proxy:
-    def __init__(self, mpv):
-        super().__setattr__("mpv", mpv)
-
-
-class _PropertyProxy(_Proxy):
+class _PropertyProxy(Proxy):
     def __dir__(self):
         return super().__dir__() + [name.replace("-", "_") for name in self.mpv.property_list]
 
 
-class _FileLocalProxy(_Proxy):
+class _FileLocalProxy(Proxy):
     def __getitem__(self, name):
         return self.mpv.__getitem__(name, file_local=True)
 
