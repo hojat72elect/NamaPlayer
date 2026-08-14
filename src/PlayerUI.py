@@ -12,6 +12,7 @@ class PlayerUI:
         self.root = tk.Tk()
         self.root.title("NamaPlayer")
         self.user_seeking = False
+        self.is_fullscreen: bool = False
 
         menu_bar = tk.Menu(self.root)
         self.root.config(menu=menu_bar)
@@ -22,7 +23,8 @@ class PlayerUI:
 
         # Video will be rendered into this frame
         self.video_frame = tk.Frame(self.root, width=800, height=600, bg="black")
-        self.video_frame.pack()
+        self.video_frame.pack(fill=tk.BOTH, expand=True)
+        self.video_frame.bind("<Double-Button-1>", self.toggle_fullscreen)
 
         # This frame will contain control buttons at the bottom of the player
         self.control_frame = tk.Frame(self.root)
@@ -78,6 +80,10 @@ class PlayerUI:
     def on_volume_change(self, _):
         volume = self.volume_bar.get()
         self.player.set_volume(volume)
+
+    def toggle_fullscreen(self, _):
+        self.is_fullscreen = not self.is_fullscreen
+        self.root.attributes("-fullscreen", self.is_fullscreen)
 
     def update_seek_bar(self):
         """Update seek bar's position to match current video position."""

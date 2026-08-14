@@ -9,7 +9,7 @@ class VideoPlayer:
         try:
             self.stop()
 
-            self.player = mpv.MPV(vo="gpu", ytdl=False)
+            self.player = mpv.MPV(vo="gpu", ytdl=False, keepaspect=True)
             return True
         except Exception as e:
             print(f"Error opening file: {e}")
