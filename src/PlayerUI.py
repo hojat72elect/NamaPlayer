@@ -42,6 +42,7 @@ class PlayerUI:
         self.volume_bar.bind("<ButtonRelease-1>", self.on_volume_change)
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.root.bind("<space>", lambda _: self.toggle_play_pause())
 
     def open_file(self):
         filepath = filedialog.askopenfilename()
