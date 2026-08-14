@@ -34,6 +34,8 @@ from ctypes import (
 from functools import partial, wraps
 from warnings import warn
 
+from core.MpvRenderCtxHandle import MpvRenderCtxHandle
+
 # We need to first load the dll into our environment.
 mpv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "lib")
 if os.path.exists(mpv_path):
@@ -95,8 +97,8 @@ class MpvHandle(c_void_p):
     pass
 
 
-class MpvRenderCtxHandle(c_void_p):
-    pass
+# class MpvRenderCtxHandle(c_void_p):
+#     pass
 
 
 class PropertyUnavailableError(AttributeError):
