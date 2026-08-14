@@ -1,7 +1,5 @@
 ## Roadmap
 
-
-- [ ] Migrate from this to a Node.js project.
 - [ ] Add playback controls (play/pause, seek, volume)
 - [ ] Implement playlist support
 - [ ] Add keyboard shortcuts
