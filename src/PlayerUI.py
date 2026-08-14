@@ -30,6 +30,11 @@ class PlayerUI:
         self.play_pause_button = tk.Button(self.control_frame, text="⏸", command=self.toggle_play_pause, width=3)
         self.play_pause_button.pack(side=tk.LEFT, padx=5, pady=5)
 
+        self.seek_bar = tk.Scale(self.control_frame, from_=0, to=100, orient=tk.HORIZONTAL, showvalue=True)
+        self.seek_bar.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5, pady=5)
+        self.seek_bar.bind("<ButtonPress-1>", self.on_seek_start)
+        self.seek_bar.bind("<ButtonRelease-1>", self.on_seek_release)
+
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def open_file(self):
