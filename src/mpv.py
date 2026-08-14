@@ -35,6 +35,7 @@ from functools import partial, wraps
 from warnings import warn
 
 from core.MpvRenderCtxHandle import MpvRenderCtxHandle
+from core.ShutdownError import ShutdownError
 
 # We need to first load the dll into our environment.
 mpv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "lib")
@@ -85,20 +86,12 @@ else:
     fs_enc = sys.getfilesystemencoding()
 
 
-class ShutdownError(SystemError):
-    pass
-
-
 class EventOverflowError(SystemError):
     pass
 
 
 class MpvHandle(c_void_p):
     pass
-
-
-# class MpvRenderCtxHandle(c_void_p):
-#     pass
 
 
 class PropertyUnavailableError(AttributeError):

@@ -1,0 +1,2 @@
+class ShutdownError(SystemError):
+    pass
