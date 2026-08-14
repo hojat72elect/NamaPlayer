@@ -2,4 +2,5 @@
 .venv
 lib
 src/__pycache__
+src/core/__pycache__
 test/__pycache__
