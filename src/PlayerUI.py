@@ -23,6 +23,13 @@ class PlayerUI:
         self.video_frame = tk.Frame(self.root, width=800, height=600, bg="black")
         self.video_frame.pack()
 
+        # This frame will contain control buttons at the bottom of the player
+        self.control_frame = tk.Frame(self.root)
+        self.control_frame.pack(fill=tk.X, side=tk.BOTTOM)
+
+        self.play_pause_button = tk.Button(self.control_frame, text="⏸", command=self.toggle_play_pause, width=3)
+        self.play_pause_button.pack(side=tk.LEFT, padx=5, pady=5)
+
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def open_file(self):
@@ -35,6 +42,13 @@ class PlayerUI:
             window_handle = self.video_frame.winfo_id()
             self.player.set_handle(window_handle)
             self.player.play(filepath)
+
+    def toggle_play_pause(self):
+        self.player.toggle_pause()
+        if self.player.player and self.player.player.pause:
+            self.play_pause_button.config(text="▶")
+        else:
+            self.play_pause_button.config(text="⏸")
 
     def on_closing(self):
         self.player.stop()

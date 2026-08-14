@@ -9,10 +9,7 @@ class VideoPlayer:
         try:
             self.stop()
 
-            self.player = mpv.MPV(
-                vo="gpu",
-                ytdl=False,
-            )
+            self.player = mpv.MPV(vo="gpu", ytdl=False)
             return True
         except Exception as e:
             print(f"Error opening file: {e}")
@@ -33,6 +30,11 @@ class VideoPlayer:
         """Set the window handle for video rendering."""
         if self.player:
             self.player.wid = str(window_id)
+
+    def toggle_pause(self):
+        """Toggle between play and pause."""
+        if self.player:
+            self.player.pause = not self.player.pause
 
     def __del__(self):
         """Cleanup on destruction."""
