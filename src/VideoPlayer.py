@@ -16,12 +16,10 @@ class VideoPlayer:
             return False
 
     def play(self, filepath: str):
-        """Start playback."""
         if self.player:
             self.player.play(filepath)
 
     def stop(self):
-        """Stop playback and release resources."""
         if self.player:
             self.player.terminate()
             self.player = None
@@ -32,9 +30,12 @@ class VideoPlayer:
             self.player.wid = str(window_id)
 
     def toggle_pause(self):
-        """Toggle between play and pause."""
         if self.player:
             self.player.pause = not self.player.pause
+
+    def set_volume(self, volume: int | float):
+        if self.player:
+            self.player.volume = volume
 
     def __del__(self):
         """Cleanup on destruction."""

@@ -36,6 +36,11 @@ class PlayerUI:
         self.seek_bar.bind("<ButtonPress-1>", self.on_seek_start)
         self.seek_bar.bind("<ButtonRelease-1>", self.on_seek_release)
 
+        self.volume_bar = tk.Scale(self.control_frame, from_=0, to=100, orient=tk.HORIZONTAL, showvalue=True, label="Volume")
+        self.volume_bar.pack(side=tk.LEFT, padx=5, pady=5)
+        self.volume_bar.set(100)
+        self.volume_bar.bind("<ButtonRelease-1>", self.on_volume_change)
+
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def open_file(self):
@@ -67,6 +72,10 @@ class PlayerUI:
                 value = self.seek_bar.get()
                 position = (float(value) / 100) * duration
                 self.player.player.time_pos = position
+
+    def on_volume_change(self, _):
+        volume = self.volume_bar.get()
+        self.player.set_volume(volume)
 
     def update_seek_bar(self):
         """Update seek bar's position to match current video position."""
