@@ -43,6 +43,7 @@ class PlayerUI:
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.bind("<space>", lambda _: self.toggle_play_pause())
+        self.root.bind("<Control-q>", lambda _: self.on_closing())
 
     def open_file(self):
         filepath = filedialog.askopenfilename()
