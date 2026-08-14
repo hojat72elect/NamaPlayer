@@ -1,0 +1,2 @@
+class PropertyUnavailableError(AttributeError):
+    pass

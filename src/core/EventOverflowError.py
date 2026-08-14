@@ -1,0 +1,2 @@
+class EventOverflowError(SystemError):
+    pass

@@ -34,7 +34,10 @@ from ctypes import (
 from functools import partial, wraps
 from warnings import warn
 
+from core.EventOverflowError import EventOverflowError
+from core.MpvHandle import MpvHandle
 from core.MpvRenderCtxHandle import MpvRenderCtxHandle
+from core.PropertyUnavailableError import PropertyUnavailableError
 from core.ShutdownError import ShutdownError
 
 # We need to first load the dll into our environment.
@@ -84,18 +87,6 @@ else:
         raise OSError("Cannot find libmpv in the usual places. Depending on your distro, you may try installing an mpv-devel or mpv-libs package. If you have libmpv around but this script can't find it, consult the documentation for ctypes.util.find_library which this script uses to look up the library filename.")
     backend = CDLL(sofile)
     fs_enc = sys.getfilesystemencoding()
-
-
-class EventOverflowError(SystemError):
-    pass
-
-
-class MpvHandle(c_void_p):
-    pass
-
-
-class PropertyUnavailableError(AttributeError):
-    pass
 
 
 class ErrorCode(object):
