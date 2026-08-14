@@ -21,8 +21,8 @@ if os.path.exists(mpv_path):
     os.environ['PATH'] = mpv_path + os.pathsep + os.environ.get('PATH', '')
 
 if os.name == 'nt':
-    # Note: mpv-2.dll with API version 2 corresponds to mpv v0.35.0. Most things should work with the fallback, too.
-    names = ['mpv-2.dll', 'libmpv-2.dll', 'mpv-1.dll']
+    # we're in Windows OS
+    names = ["libmpv-2.dll"]
     for name in names:
         dll = ctypes.util.find_library(name)
         if dll:
@@ -33,8 +33,7 @@ if os.name == 'nt':
             if os.path.isfile(dll):
                 break
         else:
-            raise OSError(
-                'Cannot find mpv-1.dll, mpv-2.dll or libmpv-2.dll in your system %PATH%. One way to deal with this is to ship the dll with your script and put the directory your script is in into %PATH% before "import mpv": os.environ["PATH"] = os.path.dirname(__file__) + os.pathsep + os.environ["PATH"] If mpv-1.dll is located elsewhere, you can add that path to os.environ["PATH"].')
+            raise OSError('Cannot find libmpv-2.dll in your system %PATH%. One way to deal with this is to ship the dll with your script and put the directory your script is in into %PATH% before "import mpv": os.environ["PATH"] = os.path.dirname(__file__) + os.pathsep + os.environ["PATH"] If mpv-1.dll is located elsewhere, you can add that path to os.environ["PATH"].')
 
     try:
         # flags argument: LOAD_LIBRARY_SEARCH_DEFAULT_DIRS | LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR
