@@ -40,6 +40,8 @@ from core.FileLocalProxy import FileLocalProxy
 from core.GeneratorStream import GeneratorStream
 from core.MpvFormat import MpvFormat
 from core.MpvHandle import MpvHandle
+from core.MpvOpenGLFBO import MpvOpenGLFBO
+from core.MpvOpenGLInitParams import MpvOpenGLInitParams
 from core.MpvRenderCtxHandle import MpvRenderCtxHandle
 from core.PropertyProxy import PropertyProxy
 from core.PropertyUnavailableError import PropertyUnavailableError
@@ -165,27 +167,6 @@ class ErrorCode(object):
         ex = kls.exception_for_ec(ec, *args)
         if ex:
             raise ex
-
-
-MpvGlGetProcAddressFn = CFUNCTYPE(c_void_p, c_void_p, c_char_p)
-
-
-class MpvOpenGLInitParams(Structure):
-    _fields_ = [("get_proc_address", MpvGlGetProcAddressFn), ("get_proc_address_ctx", c_void_p), ("extra_exts", c_void_p)]
-
-    def __init__(self, get_proc_address):
-        self.get_proc_address = get_proc_address
-        self.get_proc_address_ctx = None
-        self.extra_exts = None
-
-
-class MpvOpenGLFBO(Structure):
-    _fields_ = [("fbo", c_int), ("w", c_int), ("h", c_int), ("internal_format", c_int)]
-
-    def __init__(self, w, h, fbo=0, internal_format=0):
-        self.w, self.h = w, h
-        self.fbo = fbo
-        self.internal_format = internal_format
 
 
 class MpvRenderFrameInfo(Structure):
