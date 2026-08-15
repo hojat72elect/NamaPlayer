@@ -1,0 +1,1 @@
+identity_decoder = lambda b: b
