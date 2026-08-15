@@ -517,37 +517,37 @@ class TestHelperFunctions:
 
     def test_coax_proptype_bytes(self):
         """Test coaxing bytes property."""
-        result = mpv._mpv_coax_proptype(b"test")
+        result = mpv.mpv_coax_proptype(b"test")
         assert result == b"test"
 
     def test_coax_proptype_bool(self):
         """Test coaxing bool property."""
-        result = mpv._mpv_coax_proptype(True)
+        result = mpv.mpv_coax_proptype(True)
         assert result == b"yes"
 
-        result = mpv._mpv_coax_proptype(False)
+        result = mpv.mpv_coax_proptype(False)
         assert result == b"no"
 
     def test_coax_proptype_str(self):
         """Test coaxing string property."""
-        result = mpv._mpv_coax_proptype("test")
+        result = mpv.mpv_coax_proptype("test")
         assert result == b"test"
 
     def test_coax_proptype_int(self):
         """Test coaxing int property."""
-        result = mpv._mpv_coax_proptype(42)
+        result = mpv.mpv_coax_proptype(42)
         assert result == b"42"
 
     def test_coax_proptype_float(self):
         """Test coaxing float property."""
-        result = mpv._mpv_coax_proptype(3.14)
+        result = mpv.mpv_coax_proptype(3.14)
         assert result == b"3.14"
 
     def test_coax_proptype_invalid(self):
         """Test coaxing invalid type raises TypeError."""
         # The function only handles specific types, others will fail
         with pytest.raises(TypeError):
-            mpv._mpv_coax_proptype(object(), object)
+            mpv.mpv_coax_proptype(object(), object)
 
 
 class TestCustomExceptions:

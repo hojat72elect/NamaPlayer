@@ -36,6 +36,8 @@ from core.GeneratorStream import GeneratorStream
 from core.identity_decoder import identity_decoder
 from core.ImageOverlay import ImageOverlay
 from core.lazy_decoder import lazy_decoder
+from core.make_node_str_list import make_node_str_list
+from core.mpv_coax_proptype import mpv_coax_proptype
 from core.MpvEvent import MpvEvent
 from core.MpvEventID import MpvEventID
 from core.MpvFormat import MpvFormat
@@ -44,6 +46,7 @@ from core.MpvNodeTypes import MpvNode, MpvNodeList, MpvNodeUnion
 from core.MpvRenderContext import MpvRenderContext, RenderUpdateFn
 from core.MpvRenderCtxHandle import MpvRenderCtxHandle
 from core.MpvRenderParam import MpvRenderParam
+from core.notnull_errcheck import notnull_errcheck
 from core.OSDPropertyProxy import OSDPropertyProxy
 from core.PropertyUnavailableError import PropertyUnavailableError
 from core.py_to_mpv import py_to_mpv
@@ -131,12 +134,6 @@ def bytes_free_errcheck(res, func, *args):
     rv = cast(res, c_void_p).value
     _mpv_free(res)
     return rv
-
-
-def notnull_errcheck(res, func, *args):
-    if res is None:
-        raise RuntimeError("Underspecified error in MPV when calling {} with args {!r}: NULL pointer returned.Please consult your local debugger.".format(func.__name__, args))
-    return res
 
 
 ec_errcheck = ErrorCode.raise_for_ec
@@ -228,45 +225,9 @@ MpvRenderContext._mpv_render_context_report_swap = _mpv_render_context_report_sw
 MpvRenderContext._mpv_render_context_free = _mpv_render_context_free
 
 
-def _mpv_coax_proptype(value, proptype=str):
-    """Intelligently coax the given python value into something that can be understood as a proptype property."""
-    if type(value) is bytes:
-        return value
-    elif type(value) is bool:
-        return b"yes" if value else b"no"
-    elif proptype in (str, int, float):
-        return str(proptype(value)).encode("utf-8")
-    else:
-        raise TypeError("Cannot coax value of type {} into property type {}".format(type(value), proptype))
-
-
-def _make_node_str_list(l):
-    """Take a list of python objects and make a MPV string node array from it.
-
-    As an example, the python list ``l = [ "foo", 23, false ]`` will result in the following MPV node object::
-
-        struct mpv_node {
-            .format = MPV_NODE_ARRAY,
-            .u.list = *(struct mpv_node_array){
-                .num = len(l),
-                .keys = NULL,
-                .values = struct mpv_node[len(l)] {
-                    { .format = MPV_NODE_STRING, .u.string = l[0] },
-                    { .format = MPV_NODE_STRING, .u.string = l[1] },
-                    ...
-                }
-            }
-        }
-    """
-    char_ps = [c_char_p(_mpv_coax_proptype(e, str)) for e in l]
-    node_list = MpvNodeList(num=len(l), keys=None, values=(MpvNode * len(l))(*[MpvNode(format=MpvFormat.STRING, val=MpvNodeUnion(string=p)) for p in char_ps]))
-    node = MpvNode(format=MpvFormat.NODE_ARRAY, val=MpvNodeUnion(list=pointer(node_list)))
-    return char_ps, node_list, node, cast(pointer(node), c_void_p)
-
-
 def _make_node_str_map(d):
     """Take a dict of python objects and make a MPV string node map from it."""
-    char_ps = [(c_char_p(k.encode("utf-8")), c_char_p(_mpv_coax_proptype(v, str))) for k, v in d.items()]
+    char_ps = [(c_char_p(k.encode("utf-8")), c_char_p(mpv_coax_proptype(v, str))) for k, v in d.items()]
     node_list = MpvNodeList(num=len(d), keys=(c_char_p * len(d))(*[k for k, v in char_ps]), values=(MpvNode * len(d))(*[MpvNode(format=MpvFormat.STRING, val=MpvNodeUnion(string=v)) for k, v in char_ps]))
     node = MpvNode(format=MpvFormat.NODE_MAP, val=MpvNodeUnion(map=pointer(node_list)))
     return char_ps, node_list, node, cast(pointer(node), c_void_p)
@@ -677,7 +638,7 @@ class MPV(object):
             kwargs["name"] = name
             _1, _2, _3, pointer = _make_node_str_map(kwargs)
         else:
-            _1, _2, _3, pointer = _make_node_str_list([name, *args])
+            _1, _2, _3, pointer = make_node_str_list([name, *args])
 
         ppointer = cast(pointer, POINTER(MpvNode))
         _mpv_command_node_async(self._event_handle, id(future), ppointer)
@@ -693,7 +654,7 @@ class MPV(object):
             kwargs["name"] = name
             _1, _2, _3, pointer = _make_node_str_map(kwargs)
         else:
-            _1, _2, _3, pointer = _make_node_str_list([name, *args])
+            _1, _2, _3, pointer = make_node_str_list([name, *args])
 
         out = cast(create_string_buffer(sizeof(MpvNode)), POINTER(MpvNode))
         ppointer = cast(pointer, POINTER(MpvNode))
@@ -1573,10 +1534,10 @@ class MPV(object):
             _1, _2, _3, pointer = _make_node_str_map(value)
             _mpv_set_property(self.handle, ename, MpvFormat.NODE, pointer)
         elif isinstance(value, (list, set)):
-            _1, _2, _3, pointer = _make_node_str_list(value)
+            _1, _2, _3, pointer = make_node_str_list(value)
             _mpv_set_property(self.handle, ename, MpvFormat.NODE, pointer)
         else:
-            _mpv_set_property_string(self.handle, ename, _mpv_coax_proptype(value))
+            _mpv_set_property_string(self.handle, ename, mpv_coax_proptype(value))
 
     def __getattr__(self, name):
         return self._get_property(py_to_mpv(name), lazy_decoder)
