@@ -33,6 +33,7 @@ from core.EventOverflowError import EventOverflowError
 from core.FileLocalProxy import FileLocalProxy
 from core.FileOverlay import FileOverlay
 from core.GeneratorStream import GeneratorStream
+from core.create_null_term_cmd_arg_array import create_null_term_cmd_arg_array
 from core.identity_decoder import identity_decoder
 from core.ImageOverlay import ImageOverlay
 from core.lazy_decoder import lazy_decoder
@@ -239,11 +240,6 @@ def _event_generator(handle):
         if event.event_id.value == MpvEventID.NONE:
             raise StopIteration()
         yield event
-
-
-def _create_null_term_cmd_arg_array(name, args):
-    args = [name.encode("utf-8")] + [(arg if type(arg) is bytes else str(arg).encode("utf-8")) for arg in args if arg is not None] + [None]
-    return (c_char_p * len(args))(*args)
 
 
 _mpv_to_py = lambda name: name.replace("-", "_")
@@ -587,7 +583,7 @@ class MPV(object):
 
     def string_command(self, name, *args):
         """Execute a raw command."""
-        args = _create_null_term_cmd_arg_array(name, args)
+        args = create_null_term_cmd_arg_array(name, args)
         _mpv_command(self.handle, args)
 
     def command_async(self, name, *args, callback=None, decoder=lazy_decoder, **kwargs):
