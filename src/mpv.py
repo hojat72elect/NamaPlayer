@@ -27,17 +27,18 @@ from ctypes import (
 from functools import partial, wraps
 from warnings import warn
 
+from core.create_null_term_cmd_arg_array import create_null_term_cmd_arg_array
 from core.DecoderPropertyProxy import DecoderPropertyProxy
 from core.ErrorCode import ErrorCode
 from core.EventOverflowError import EventOverflowError
 from core.FileLocalProxy import FileLocalProxy
 from core.FileOverlay import FileOverlay
 from core.GeneratorStream import GeneratorStream
-from core.create_null_term_cmd_arg_array import create_null_term_cmd_arg_array
 from core.identity_decoder import identity_decoder
 from core.ImageOverlay import ImageOverlay
 from core.lazy_decoder import lazy_decoder
 from core.make_node_str_list import make_node_str_list
+from core.make_node_str_map import make_node_str_map
 from core.mpv_coax_proptype import mpv_coax_proptype
 from core.MpvEvent import MpvEvent
 from core.MpvEventID import MpvEventID
@@ -224,14 +225,6 @@ MpvRenderContext._mpv_render_context_update = _mpv_render_context_update
 MpvRenderContext._mpv_render_context_render = _mpv_render_context_render
 MpvRenderContext._mpv_render_context_report_swap = _mpv_render_context_report_swap
 MpvRenderContext._mpv_render_context_free = _mpv_render_context_free
-
-
-def _make_node_str_map(d):
-    """Take a dict of python objects and make a MPV string node map from it."""
-    char_ps = [(c_char_p(k.encode("utf-8")), c_char_p(mpv_coax_proptype(v, str))) for k, v in d.items()]
-    node_list = MpvNodeList(num=len(d), keys=(c_char_p * len(d))(*[k for k, v in char_ps]), values=(MpvNode * len(d))(*[MpvNode(format=MpvFormat.STRING, val=MpvNodeUnion(string=v)) for k, v in char_ps]))
-    node = MpvNode(format=MpvFormat.NODE_MAP, val=MpvNodeUnion(map=pointer(node_list)))
-    return char_ps, node_list, node, cast(pointer(node), c_void_p)
 
 
 def _event_generator(handle):
@@ -632,7 +625,7 @@ class MPV(object):
             if args:
                 raise ValueError("Can only call mpv commands either using positional or using named arguments, not a mix of both.")
             kwargs["name"] = name
-            _1, _2, _3, pointer = _make_node_str_map(kwargs)
+            _1, _2, _3, pointer = make_node_str_map(kwargs)
         else:
             _1, _2, _3, pointer = make_node_str_list([name, *args])
 
@@ -648,7 +641,7 @@ class MPV(object):
             if args:
                 raise ValueError("Can only call mpv commands either using positional or using named arguments, not a mix of both.")
             kwargs["name"] = name
-            _1, _2, _3, pointer = _make_node_str_map(kwargs)
+            _1, _2, _3, pointer = make_node_str_map(kwargs)
         else:
             _1, _2, _3, pointer = make_node_str_list([name, *args])
 
@@ -1527,7 +1520,7 @@ class MPV(object):
         self.check_core_alive()
         ename = name.encode("utf-8")
         if isinstance(value, dict):
-            _1, _2, _3, pointer = _make_node_str_map(value)
+            _1, _2, _3, pointer = make_node_str_map(value)
             _mpv_set_property(self.handle, ename, MpvFormat.NODE, pointer)
         elif isinstance(value, (list, set)):
             _1, _2, _3, pointer = make_node_str_list(value)
