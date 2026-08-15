@@ -35,12 +35,12 @@ from functools import partial, wraps
 from warnings import warn
 
 from core.EventOverflowError import EventOverflowError
+from core.FileLocalProxy import FileLocalProxy
 from core.MpvFormat import MpvFormat
 from core.MpvHandle import MpvHandle
 from core.MpvRenderCtxHandle import MpvRenderCtxHandle
 from core.PropertyProxy import PropertyProxy
 from core.PropertyUnavailableError import PropertyUnavailableError
-from core.Proxy import Proxy
 from core.ShutdownError import ShutdownError
 
 # We need to first load the dll into our environment.
@@ -667,17 +667,6 @@ _mpv_to_py = lambda name: name.replace("-", "_")
 _drop_nones = lambda *args: [arg for arg in args if arg is not None]
 
 
-class _FileLocalProxy(Proxy):
-    def __getitem__(self, name):
-        return self.mpv.__getitem__(name, file_local=True)
-
-    def __setitem__(self, name, value):
-        return self.mpv.__setitem__(name, value, file_local=True)
-
-    def __iter__(self):
-        return iter(self.mpv)
-
-
 class _OSDPropertyProxy(PropertyProxy):
     def __getattr__(self, name):
         return self.mpv._get_property(_py_to_mpv(name), fmt=MpvFormat.OSD_STRING)
@@ -843,7 +832,7 @@ class MPV(object):
             _mpv_initialize(self.handle)
 
         self.osd = _OSDPropertyProxy(self)
-        self.file_local = _FileLocalProxy(self)
+        self.file_local = FileLocalProxy(self)
         self.raw = _DecoderPropertyProxy(self, identity_decoder)
         self.strict = _DecoderPropertyProxy(self, strict_decoder)
         self.lazy = _DecoderPropertyProxy(self, lazy_decoder)
