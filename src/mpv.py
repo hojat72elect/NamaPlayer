@@ -1,5 +1,4 @@
 import collections
-import ctypes
 import ctypes.util
 import os.path
 import queue
@@ -13,14 +12,10 @@ from ctypes import (
     CDLL,
     CFUNCTYPE,
     POINTER,
-    Structure,
-    addressof,
-    c_char,
     c_char_p,
     c_double,
     c_int,
     c_int64,
-    c_uint64,
     c_ulong,
     c_ulonglong,
     c_void_p,
@@ -36,26 +31,24 @@ from core.DecoderPropertyProxy import DecoderPropertyProxy
 from core.ErrorCode import ErrorCode
 from core.EventOverflowError import EventOverflowError
 from core.FileLocalProxy import FileLocalProxy
+from core.FileOverlay import FileOverlay
 from core.GeneratorStream import GeneratorStream
 from core.identity_decoder import identity_decoder
-from core.kwargs_to_render_param_array import kwargs_to_render_param_array
+from core.ImageOverlay import ImageOverlay
 from core.lazy_decoder import lazy_decoder
-from core.MpvEventClientMessage import MpvEventClientMessage
-from core.MpvEventCommand import MpvEventCommand
-from core.MpvEventEndFile import MpvEventEndFile
-from core.MpvEventHook import MpvEventHook
+from core.MpvEvent import MpvEvent
 from core.MpvEventID import MpvEventID
-from core.MpvEventProperty import MpvEventProperty
-from core.MpvEventStartFile import MpvEventStartFile
 from core.MpvFormat import MpvFormat
 from core.MpvHandle import MpvHandle
 from core.MpvNodeTypes import MpvNode, MpvNodeList, MpvNodeUnion
+from core.MpvRenderContext import MpvRenderContext, RenderUpdateFn
 from core.MpvRenderCtxHandle import MpvRenderCtxHandle
 from core.MpvRenderParam import MpvRenderParam
-from core.PropertyProxy import PropertyProxy
+from core.OSDPropertyProxy import OSDPropertyProxy
 from core.PropertyUnavailableError import PropertyUnavailableError
 from core.py_to_mpv import py_to_mpv
 from core.ShutdownError import ShutdownError
+from core.StreamCallbackInfo import StreamCancelFn, StreamCloseFn, StreamOpenFn, StreamReadFn, StreamSeekFn, StreamSizeFn
 from core.strict_decoder import strict_decoder
 
 # We need to first load the dll into our environment.
@@ -107,67 +100,7 @@ else:
     fs_enc = sys.getfilesystemencoding()
 
 
-class MpvEvent(Structure):
-    _fields_ = [("event_id", MpvEventID), ("error", c_int), ("reply_userdata", c_ulonglong), ("_data", c_void_p)]
-
-    @property
-    def data(self):
-        dtype = {
-            MpvEventID.GET_PROPERTY_REPLY: MpvEventProperty,
-            MpvEventID.PROPERTY_CHANGE: MpvEventProperty,
-            MpvEventID.LOG_MESSAGE: MpvEventLogMessage,
-            MpvEventID.CLIENT_MESSAGE: MpvEventClientMessage,
-            MpvEventID.START_FILE: MpvEventStartFile,
-            MpvEventID.END_FILE: MpvEventEndFile,
-            MpvEventID.HOOK: MpvEventHook,
-            MpvEventID.COMMAND_REPLY: MpvEventCommand,
-        }.get(self.event_id.value)
-        return cast(self._data, POINTER(dtype)).contents if dtype else None
-
-    def as_dict(self, decoder=identity_decoder):
-        out = cast(create_string_buffer(sizeof(MpvNode)), POINTER(MpvNode))
-        _mpv_event_to_node(out, pointer(self))
-        rv = out.contents.node_value(decoder=decoder)
-        _mpv_free_node_contents(out)
-        return rv
-
-    def __str__(self):
-        d = self.data
-        return f"<{type(d).__name__} ({self.event_id.value}) err={self.error} p={self.reply_userdata:016x} d={self.as_dict()}>"
-
-
-class MpvEventLogMessage(Structure):
-    _fields_ = [("_prefix", c_char_p), ("_level", c_char_p), ("_text", c_char_p)]
-
-    @property
-    def prefix(self):
-        return self._prefix.decode("utf-8")
-
-    @property
-    def level(self):
-        return self._level.decode("utf-8")
-
-    @property
-    def text(self):
-        return lazy_decoder(self._text)
-
-
-StreamReadFn = CFUNCTYPE(c_int64, c_void_p, POINTER(c_char), c_uint64)
-StreamSeekFn = CFUNCTYPE(c_int64, c_void_p, c_int64)
-StreamSizeFn = CFUNCTYPE(c_int64, c_void_p)
-StreamCloseFn = CFUNCTYPE(None, c_void_p)
-StreamCancelFn = CFUNCTYPE(None, c_void_p)
-
-
-class StreamCallbackInfo(Structure):
-    _fields_ = [("cookie", c_void_p), ("read", StreamReadFn), ("seek", StreamSeekFn), ("size", StreamSizeFn), ("close", StreamCloseFn), ("cancel", StreamCancelFn)]
-
-
-StreamOpenFn = CFUNCTYPE(c_int, c_void_p, c_char_p, POINTER(StreamCallbackInfo))
-
 WakeupCallback = CFUNCTYPE(None, c_void_p)
-
-RenderUpdateFn = CFUNCTYPE(None, c_void_p)
 
 
 def _handle_func(name, args, restype, errcheck, ctx=MpvHandle, deprecated=False):
@@ -280,6 +213,20 @@ _handle_func("mpv_render_context_render", [POINTER(MpvRenderParam)], c_int, ec_e
 _handle_func("mpv_render_context_report_swap", [], None, errcheck=None, ctx=MpvRenderCtxHandle)
 _handle_func("mpv_render_context_free", [], None, errcheck=None, ctx=MpvRenderCtxHandle)
 
+# Set up MpvEvent with the functions it needs
+MpvEvent._mpv_event_to_node = _mpv_event_to_node
+MpvEvent._mpv_free_node_contents = _mpv_free_node_contents
+
+# Set up MpvRenderContext with the functions it needs
+MpvRenderContext._mpv_render_context_create = _mpv_render_context_create
+MpvRenderContext._mpv_render_context_set_parameter = _mpv_render_context_set_parameter
+MpvRenderContext._mpv_render_context_get_info = _mpv_render_context_get_info
+MpvRenderContext._mpv_render_context_set_update_callback = _mpv_render_context_set_update_callback
+MpvRenderContext._mpv_render_context_update = _mpv_render_context_update
+MpvRenderContext._mpv_render_context_render = _mpv_render_context_render
+MpvRenderContext._mpv_render_context_report_swap = _mpv_render_context_report_swap
+MpvRenderContext._mpv_render_context_free = _mpv_render_context_free
+
 
 def _mpv_coax_proptype(value, proptype=str):
     """Intelligently coax the given python value into something that can be understood as a proptype property."""
@@ -343,88 +290,6 @@ _mpv_to_py = lambda name: name.replace("-", "_")
 _drop_nones = lambda *args: [arg for arg in args if arg is not None]
 
 
-class _OSDPropertyProxy(PropertyProxy):
-    def __getattr__(self, name):
-        return self.mpv._get_property(py_to_mpv(name), fmt=MpvFormat.OSD_STRING)
-
-    def __setattr__(self, _name, _value):
-        raise AttributeError("OSD properties are read-only. Please use the regular property API for writing.")
-
-
-class ImageOverlay:
-    def __init__(self, m, overlay_id, img=None, pos=(0, 0)):
-        self.m = m
-        self.overlay_id = overlay_id
-        self.pos = pos
-        self._size = None
-        if img is not None:
-            self.update(img)
-
-    def update(self, img=None, pos=None):
-        from PIL import Image
-
-        if img is not None:
-            self.img = img
-        img = self.img
-
-        w, h = img.size
-        stride = w * 4
-
-        if pos is not None:
-            self.pos = pos
-        x, y = self.pos
-
-        # Pre-multiply alpha channel
-        bg = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-        out = Image.alpha_composite(bg, img)
-
-        # Copy image to ctypes buffer
-        if img.size != self._size:
-            self._buf = create_string_buffer(w * h * 4)
-            self._size = img.size
-
-        ctypes.memmove(self._buf, out.tobytes("raw", "BGRA"), w * h * 4)
-        source = "&" + str(addressof(self._buf))
-
-        self.m.overlay_add(self.overlay_id, x, y, source, 0, "bgra", w, h, stride)
-
-    def remove(self):
-        self.m.remove_overlay(self.overlay_id)
-
-
-class FileOverlay:
-    def __init__(self, m, overlay_id, filename=None, size=None, stride=None, pos=(0, 0)):
-        self.m = m
-        self.overlay_id = overlay_id
-        self.pos = pos
-        self.size = size
-        self.stride = stride
-        if filename is not None:
-            self.update(filename)
-
-    def update(self, filename=None, size=None, stride=None, pos=None):
-        if filename is not None:
-            self.filename = filename
-
-        if pos is not None:
-            self.pos = pos
-
-        if size is not None:
-            self.size = size
-
-        if stride is not None:
-            self.stride = stride
-
-        x, y = self.pos
-        w, h = self.size
-        stride = self.stride or 4 * w
-
-        self.m.overlay_add(self, self.overlay_id, x, y, self.filename, 0, "bgra", w, h, stride)
-
-    def remove(self):
-        self.m.remove_overlay(self.overlay_id)
-
-
 class MPV(object):
     """See man mpv(1) for the details of the implemented commands. All mpv properties can be accessed as
     ``my_mpv.some_property`` and all mpv options can be accessed as ``my_mpv['some-option']``.
@@ -461,7 +326,7 @@ class MPV(object):
         finally:
             _mpv_initialize(self.handle)
 
-        self.osd = _OSDPropertyProxy(self)
+        self.osd = OSDPropertyProxy(self)
         self.file_local = FileLocalProxy(self)
         self.raw = DecoderPropertyProxy(self, identity_decoder)
         self.strict = DecoderPropertyProxy(self, strict_decoder)
@@ -1753,54 +1618,3 @@ class MPV(object):
             return self._get_property("option-info/" + name)
         except AttributeError:
             return None
-
-
-class MpvRenderContext:
-    def __init__(self, mpv, api_type, **kwargs):
-        self._mpv = mpv
-        kwargs["api_type"] = api_type
-
-        buf = cast(create_string_buffer(sizeof(MpvRenderCtxHandle)), POINTER(MpvRenderCtxHandle))
-        _mpv_render_context_create(buf, mpv.handle, kwargs_to_render_param_array(kwargs))
-        self._handle = buf.contents
-
-    def free(self):
-        _mpv_render_context_free(self._handle)
-
-    def __setattr__(self, name, value):
-        if name.startswith("_"):
-            super().__setattr__(name, value)
-
-        elif name == "update_cb":
-            func = value if value else (lambda: None)
-            self._update_cb = value
-            self._update_fn_wrapper = RenderUpdateFn(lambda _userdata: func())
-            _mpv_render_context_set_update_callback(self._handle, self._update_fn_wrapper, None)
-
-        else:
-            param = MpvRenderParam(name, value)
-            _mpv_render_context_set_parameter(self._handle, param)
-
-    def __getattr__(self, name):
-        if name == "update_cb":
-            return self._update_cb
-
-        elif name == "handle":
-            return self._handle
-
-        param = MpvRenderParam(name)
-        data_type = type(param.data.contents)
-        buf = cast(create_string_buffer(sizeof(data_type)), POINTER(data_type))
-        param.data = buf
-        _mpv_render_context_get_info(self._handle, param)
-        return buf.contents.as_dict()
-
-    def update(self):
-        """Calls mpv_render_context_update and returns the MPV_RENDER_UPDATE_FRAME flag (see render.h)"""
-        return bool(_mpv_render_context_update(self._handle) & 1)
-
-    def render(self, **kwargs):
-        _mpv_render_context_render(self._handle, kwargs_to_render_param_array(kwargs))
-
-    def report_swap(self):
-        _mpv_render_context_report_swap(self._handle)
