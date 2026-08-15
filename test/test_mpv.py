@@ -22,6 +22,8 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import mpv
+from core.MpvOpenGLFBO import MpvOpenGLFBO
+from core.MpvRenderFrameInfo import MpvRenderFrameInfo
 
 
 class TestErrorCode:
@@ -266,7 +268,7 @@ class TestMpvRenderFrameInfo:
 
     def test_as_dict(self):
         """Test as_dict method."""
-        info = mpv.MpvRenderFrameInfo()
+        info = MpvRenderFrameInfo()
         info.flags = 1
         info.target_time = 1000
         result = info.as_dict()
@@ -597,7 +599,7 @@ class TestMpvOpenGLFBO:
 
     def test_init_default(self):
         """Test default initialization."""
-        fbo = mpv.MpvOpenGLFBO(1920, 1080)
+        fbo = MpvOpenGLFBO(1920, 1080)
         assert fbo.w == 1920
         assert fbo.h == 1080
         assert fbo.fbo == 0
@@ -605,7 +607,7 @@ class TestMpvOpenGLFBO:
 
     def test_init_with_params(self):
         """Test initialization with parameters."""
-        fbo = mpv.MpvOpenGLFBO(1920, 1080, fbo=1, internal_format=2)
+        fbo = MpvOpenGLFBO(1920, 1080, fbo=1, internal_format=2)
         assert fbo.w == 1920
         assert fbo.h == 1080
         assert fbo.fbo == 1
