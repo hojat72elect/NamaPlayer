@@ -38,11 +38,14 @@ from core.EventOverflowError import EventOverflowError
 from core.FileLocalProxy import FileLocalProxy
 from core.GeneratorStream import GeneratorStream
 from core.identity_decoder import identity_decoder
+from core.kwargs_to_render_param_array import kwargs_to_render_param_array
 from core.lazy_decoder import lazy_decoder
 from core.MpvEventClientMessage import MpvEventClientMessage
 from core.MpvEventCommand import MpvEventCommand
+from core.MpvEventEndFile import MpvEventEndFile
 from core.MpvEventHook import MpvEventHook
 from core.MpvEventID import MpvEventID
+from core.MpvEventProperty import MpvEventProperty
 from core.MpvEventStartFile import MpvEventStartFile
 from core.MpvFormat import MpvFormat
 from core.MpvHandle import MpvHandle
@@ -104,11 +107,6 @@ else:
     fs_enc = sys.getfilesystemencoding()
 
 
-def kwargs_to_render_param_array(kwargs):
-    t = MpvRenderParam * (len(kwargs) + 1)
-    return t(*kwargs.items(), ("invalid", None))
-
-
 class MpvEvent(Structure):
     _fields_ = [("event_id", MpvEventID), ("error", c_int), ("reply_userdata", c_ulonglong), ("_data", c_void_p)]
 
@@ -138,18 +136,6 @@ class MpvEvent(Structure):
         return f"<{type(d).__name__} ({self.event_id.value}) err={self.error} p={self.reply_userdata:016x} d={self.as_dict()}>"
 
 
-class MpvEventProperty(Structure):
-    _fields_ = [("_name", c_char_p), ("format", MpvFormat), ("data", MpvNodeUnion)]
-
-    @property
-    def name(self):
-        return self._name.decode("utf-8")
-
-    @property
-    def value(self):
-        return MpvNode.node_cast_value(self.data, self.format.value, decoder=lazy_decoder)
-
-
 class MpvEventLogMessage(Structure):
     _fields_ = [("_prefix", c_char_p), ("_level", c_char_p), ("_text", c_char_p)]
 
@@ -164,23 +150,6 @@ class MpvEventLogMessage(Structure):
     @property
     def text(self):
         return lazy_decoder(self._text)
-
-
-class MpvEventEndFile(Structure):
-    _fields_ = [
-        ("reason", c_int),
-        ("error", c_int),
-        ("playlist_entry_id", c_ulonglong),
-        ("playlist_insert_id", c_ulonglong),
-        ("playlist_insert_num_entries", c_int),
-    ]
-
-    EOF = 0
-    RESTARTED = 1
-    ABORTED = 2
-    QUIT = 3
-    ERROR = 4
-    REDIRECT = 5
 
 
 StreamReadFn = CFUNCTYPE(c_int64, c_void_p, POINTER(c_char), c_uint64)
