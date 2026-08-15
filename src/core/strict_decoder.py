@@ -1,0 +1,1 @@
+strict_decoder = lambda b: b.decode("utf-8")

@@ -42,6 +42,7 @@ from core.lazy_decoder import lazy_decoder
 from core.MpvEventClientMessage import MpvEventClientMessage
 from core.MpvEventCommand import MpvEventCommand
 from core.MpvEventHook import MpvEventHook
+from core.MpvEventID import MpvEventID
 from core.MpvEventStartFile import MpvEventStartFile
 from core.MpvFormat import MpvFormat
 from core.MpvHandle import MpvHandle
@@ -52,6 +53,7 @@ from core.PropertyProxy import PropertyProxy
 from core.PropertyUnavailableError import PropertyUnavailableError
 from core.py_to_mpv import py_to_mpv
 from core.ShutdownError import ShutdownError
+from core.strict_decoder import strict_decoder
 
 # We need to first load the dll into our environment.
 mpv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "lib")
@@ -105,38 +107,6 @@ else:
 def kwargs_to_render_param_array(kwargs):
     t = MpvRenderParam * (len(kwargs) + 1)
     return t(*kwargs.items(), ("invalid", None))
-
-
-class MpvEventID(c_int):
-    NONE = 0
-    SHUTDOWN = 1
-    LOG_MESSAGE = 2
-    GET_PROPERTY_REPLY = 3
-    SET_PROPERTY_REPLY = 4
-    COMMAND_REPLY = 5
-    START_FILE = 6
-    END_FILE = 7
-    FILE_LOADED = 8
-    CLIENT_MESSAGE = 16
-    VIDEO_RECONFIG = 17
-    AUDIO_RECONFIG = 18
-    SEEK = 20
-    PLAYBACK_RESTART = 21
-    PROPERTY_CHANGE = 22
-    QUEUE_OVERFLOW = 24
-    HOOK = 25
-
-    ANY = (SHUTDOWN, LOG_MESSAGE, GET_PROPERTY_REPLY, SET_PROPERTY_REPLY, COMMAND_REPLY, START_FILE, END_FILE, FILE_LOADED, CLIENT_MESSAGE, VIDEO_RECONFIG, AUDIO_RECONFIG, SEEK, PLAYBACK_RESTART, PROPERTY_CHANGE)
-
-    def __repr__(self):
-        return f"<MpvEventID {self.value} {_mpv_event_name(self.value).decode('utf-8')}>"
-
-    @classmethod
-    def from_str(kls, s):
-        return getattr(kls, s.upper().replace("-", "_"))
-
-
-strict_decoder = lambda b: b.decode("utf-8")
 
 
 class MpvEvent(Structure):
