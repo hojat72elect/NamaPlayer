@@ -21,7 +21,6 @@ from ctypes import (
     c_void_p,
     cast,
     create_string_buffer,
-    pointer,
     sizeof,
 )
 from functools import partial, wraps
@@ -44,7 +43,7 @@ from core.MpvEvent import MpvEvent
 from core.MpvEventID import MpvEventID
 from core.MpvFormat import MpvFormat
 from core.MpvHandle import MpvHandle
-from core.MpvNodeTypes import MpvNode, MpvNodeList, MpvNodeUnion
+from core.MpvNodeTypes import MpvNode
 from core.MpvRenderContext import MpvRenderContext, RenderUpdateFn
 from core.MpvRenderCtxHandle import MpvRenderCtxHandle
 from core.MpvRenderParam import MpvRenderParam
