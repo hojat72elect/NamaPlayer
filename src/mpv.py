@@ -38,6 +38,7 @@ from core.EventOverflowError import EventOverflowError
 from core.MpvFormat import MpvFormat
 from core.MpvHandle import MpvHandle
 from core.MpvRenderCtxHandle import MpvRenderCtxHandle
+from core.PropertyProxy import PropertyProxy
 from core.PropertyUnavailableError import PropertyUnavailableError
 from core.Proxy import Proxy
 from core.ShutdownError import ShutdownError
@@ -666,11 +667,6 @@ _mpv_to_py = lambda name: name.replace("-", "_")
 _drop_nones = lambda *args: [arg for arg in args if arg is not None]
 
 
-class _PropertyProxy(Proxy):
-    def __dir__(self):
-        return super().__dir__() + [name.replace("-", "_") for name in self.mpv.property_list]
-
-
 class _FileLocalProxy(Proxy):
     def __getitem__(self, name):
         return self.mpv.__getitem__(name, file_local=True)
@@ -682,7 +678,7 @@ class _FileLocalProxy(Proxy):
         return iter(self.mpv)
 
 
-class _OSDPropertyProxy(_PropertyProxy):
+class _OSDPropertyProxy(PropertyProxy):
     def __getattr__(self, name):
         return self.mpv._get_property(_py_to_mpv(name), fmt=MpvFormat.OSD_STRING)
 
@@ -690,7 +686,7 @@ class _OSDPropertyProxy(_PropertyProxy):
         raise AttributeError("OSD properties are read-only. Please use the regular property API for writing.")
 
 
-class _DecoderPropertyProxy(_PropertyProxy):
+class _DecoderPropertyProxy(PropertyProxy):
     def __init__(self, mpv, decoder):
         super().__init__(mpv)
         super().__setattr__("_decoder", decoder)
