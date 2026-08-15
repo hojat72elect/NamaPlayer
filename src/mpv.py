@@ -34,6 +34,7 @@ from ctypes import (
 from functools import partial, wraps
 from warnings import warn
 
+from core.DecoderPropertyProxy import DecoderPropertyProxy
 from core.EventOverflowError import EventOverflowError
 from core.FileLocalProxy import FileLocalProxy
 from core.MpvFormat import MpvFormat
@@ -675,18 +676,6 @@ class _OSDPropertyProxy(PropertyProxy):
         raise AttributeError("OSD properties are read-only. Please use the regular property API for writing.")
 
 
-class _DecoderPropertyProxy(PropertyProxy):
-    def __init__(self, mpv, decoder):
-        super().__init__(mpv)
-        super().__setattr__("_decoder", decoder)
-
-    def __getattr__(self, name):
-        return self.mpv._get_property(_py_to_mpv(name), decoder=self._decoder)
-
-    def __setattr__(self, name, value):
-        setattr(self.mpv, _py_to_mpv(name), value)
-
-
 class GeneratorStream:
     """Transform a python generator into an mpv-compatible stream object. The total size of the file can be indicated to
     mpv using the size argument to __init__. Seeking is not supported.
@@ -833,9 +822,9 @@ class MPV(object):
 
         self.osd = _OSDPropertyProxy(self)
         self.file_local = FileLocalProxy(self)
-        self.raw = _DecoderPropertyProxy(self, identity_decoder)
-        self.strict = _DecoderPropertyProxy(self, strict_decoder)
-        self.lazy = _DecoderPropertyProxy(self, lazy_decoder)
+        self.raw = DecoderPropertyProxy(self, identity_decoder)
+        self.strict = DecoderPropertyProxy(self, strict_decoder)
+        self.lazy = DecoderPropertyProxy(self, lazy_decoder)
 
         self._event_callbacks = []
         self._command_reply_callbacks = {}
