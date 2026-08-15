@@ -38,14 +38,11 @@ from core.DecoderPropertyProxy import DecoderPropertyProxy
 from core.EventOverflowError import EventOverflowError
 from core.FileLocalProxy import FileLocalProxy
 from core.GeneratorStream import GeneratorStream
+from core.MpvByteArray import MpvByteArray
 from core.MpvFormat import MpvFormat
 from core.MpvHandle import MpvHandle
-from core.MpvOpenGLDRMParams import MpvOpenGLDRMParams
-from core.MpvOpenGLDRMParamsV2 import MpvOpenGLDRMParamsV2
-from core.MpvOpenGLFBO import MpvOpenGLFBO
-from core.MpvOpenGLInitParams import MpvOpenGLInitParams
 from core.MpvRenderCtxHandle import MpvRenderCtxHandle
-from core.MpvRenderFrameInfo import MpvRenderFrameInfo
+from core.MpvRenderParam import MpvRenderParam
 from core.PropertyProxy import PropertyProxy
 from core.PropertyUnavailableError import PropertyUnavailableError
 from core.py_to_mpv import py_to_mpv
@@ -172,59 +169,6 @@ class ErrorCode(object):
             raise ex
 
 
-class MpvOpenGLDRMDrawSurfaceSize(Structure):
-    _fields_ = [("width", c_int), ("height", c_int)]
-
-
-class MpvRenderParam(Structure):
-    _fields_ = [("type_id", c_int), ("data", c_void_p)]
-
-    # maps human-readable type name to (type_id, argtype) tuple.
-    # The type IDs come from libmpv/render.h
-    TYPES = {
-        "invalid": (0, None),
-        "api_type": (1, str),
-        "opengl_init_params": (2, MpvOpenGLInitParams),
-        "opengl_fbo": (3, MpvOpenGLFBO),
-        "flip_y": (4, bool),
-        "depth": (5, int),
-        "icc_profile": (6, bytes),
-        "ambient_light": (7, int),
-        "x11_display": (8, c_void_p),
-        "wl_display": (9, c_void_p),
-        "advanced_control": (10, bool),
-        "next_frame_info": (11, MpvRenderFrameInfo),
-        "block_for_target_time": (12, bool),
-        "skip_rendering": (13, bool),
-        "drm_display": (14, MpvOpenGLDRMParams),
-        "drm_draw_surface_size": (15, MpvOpenGLDRMDrawSurfaceSize),
-        "drm_display_v2": (16, MpvOpenGLDRMParamsV2),
-    }
-
-    def __init__(self, name, value=None):
-        if name not in self.TYPES:
-            raise ValueError('unknown render param type "{}"'.format(name))
-        self.type_id, cons = self.TYPES[name]
-        if cons is None:
-            self.value = None
-            self.data = c_void_p()
-        elif cons is str:
-            self.value = value
-            self.data = cast(c_char_p(value.encode("utf-8")), c_void_p)
-        elif cons is bytes:
-            self.value = MpvByteArray(value)
-            self.data = cast(pointer(self.value), c_void_p)
-        elif cons is bool:
-            self.value = c_int(int(bool(value)))
-            self.data = cast(pointer(self.value), c_void_p)
-        elif cons is c_void_p:
-            self.value = value
-            self.data = cast(self.value, c_void_p)
-        else:
-            self.value = cons(**value)
-            self.data = cast(pointer(self.value), c_void_p)
-
-
 def kwargs_to_render_param_array(kwargs):
     t = MpvRenderParam * (len(kwargs) + 1)
     return t(*kwargs.items(), ("invalid", None))
@@ -276,18 +220,6 @@ class MpvNodeList(Structure):
 
     def dict_value(self, decoder=identity_decoder):
         return {self.keys[i].decode("utf-8"): self.values[i].node_value(decoder) for i in range(self.num)}
-
-
-class MpvByteArray(Structure):
-    _fields_ = [("data", c_void_p), ("size", c_size_t)]
-
-    def __init__(self, value):
-        self._value = value
-        self.data = cast(c_char_p(value), c_void_p)
-        self.size = len(value)
-
-    def bytes_value(self):
-        return cast(self.data, POINTER(c_char))[: self.size]
 
 
 class MpvNode(Structure):
