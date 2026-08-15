@@ -500,8 +500,8 @@ class TestHelperFunctions:
 
     def test_py_to_mpv(self):
         """Test Python to MPV name conversion."""
-        assert mpv._py_to_mpv("test_property") == "test-property"
-        assert mpv._py_to_mpv("volume") == "volume"
+        assert mpv.py_to_mpv("test_property") == "test-property"
+        assert mpv.py_to_mpv("volume") == "volume"
 
     def test_mpv_to_py(self):
         """Test MPV to Python name conversion."""

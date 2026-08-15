@@ -1,6 +1,5 @@
 from core.PropertyProxy import PropertyProxy
-
-_py_to_mpv = lambda name: name.replace("_", "-")
+from core.py_to_mpv import py_to_mpv
 
 
 class DecoderPropertyProxy(PropertyProxy):
@@ -9,7 +8,7 @@ class DecoderPropertyProxy(PropertyProxy):
         super().__setattr__("_decoder", decoder)
 
     def __getattr__(self, name):
-        return self.mpv._get_property(_py_to_mpv(name), decoder=self._decoder)
+        return self.mpv._get_property(py_to_mpv(name), decoder=self._decoder)
 
     def __setattr__(self, name, value):
-        setattr(self.mpv, _py_to_mpv(name), value)
+        setattr(self.mpv, py_to_mpv(name), value)

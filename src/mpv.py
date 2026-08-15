@@ -43,6 +43,7 @@ from core.MpvHandle import MpvHandle
 from core.MpvRenderCtxHandle import MpvRenderCtxHandle
 from core.PropertyProxy import PropertyProxy
 from core.PropertyUnavailableError import PropertyUnavailableError
+from core.py_to_mpv import py_to_mpv
 from core.ShutdownError import ShutdownError
 
 # We need to first load the dll into our environment.
@@ -663,7 +664,6 @@ def _create_null_term_cmd_arg_array(name, args):
     return (c_char_p * len(args))(*args)
 
 
-_py_to_mpv = lambda name: name.replace("_", "-")
 _mpv_to_py = lambda name: name.replace("-", "_")
 
 _drop_nones = lambda *args: [arg for arg in args if arg is not None]
@@ -671,7 +671,7 @@ _drop_nones = lambda *args: [arg for arg in args if arg is not None]
 
 class _OSDPropertyProxy(PropertyProxy):
     def __getattr__(self, name):
-        return self.mpv._get_property(_py_to_mpv(name), fmt=MpvFormat.OSD_STRING)
+        return self.mpv._get_property(py_to_mpv(name), fmt=MpvFormat.OSD_STRING)
 
     def __setattr__(self, _name, _value):
         raise AttributeError("OSD properties are read-only. Please use the regular property API for writing.")
@@ -1256,7 +1256,7 @@ class MPV(object):
 
     @staticmethod
     def _encode_options(options):
-        return ",".join("{}={}".format(_py_to_mpv(str(key)), str(val)) for key, val in options.items())
+        return ",".join("{}={}".format(py_to_mpv(str(key)), str(val)) for key, val in options.items())
 
     def loadfile(self, filename, mode="replace", index=None, **options):
         """Mapped mpv loadfile command, see man mpv(1)."""
@@ -2040,12 +2040,12 @@ class MPV(object):
             _mpv_set_property_string(self.handle, ename, _mpv_coax_proptype(value))
 
     def __getattr__(self, name):
-        return self._get_property(_py_to_mpv(name), lazy_decoder)
+        return self._get_property(py_to_mpv(name), lazy_decoder)
 
     def __setattr__(self, name, value):
         try:
             if name != "handle" and not name.startswith("_"):
-                self._set_property(_py_to_mpv(name), value)
+                self._set_property(py_to_mpv(name), value)
             else:
                 super().__setattr__(name, value)
         except AttributeError:
