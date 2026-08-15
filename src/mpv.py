@@ -39,12 +39,13 @@ from core.FileLocalProxy import FileLocalProxy
 from core.GeneratorStream import GeneratorStream
 from core.identity_decoder import identity_decoder
 from core.lazy_decoder import lazy_decoder
+from core.MpvEventClientMessage import MpvEventClientMessage
+from core.MpvEventCommand import MpvEventCommand
+from core.MpvEventHook import MpvEventHook
 from core.MpvEventStartFile import MpvEventStartFile
 from core.MpvFormat import MpvFormat
 from core.MpvHandle import MpvHandle
-from core.MpvNode import MpvNode
-from core.MpvNodeList import MpvNodeList
-from core.MpvNodeUnion import MpvNodeUnion
+from core.MpvNodeTypes import MpvNode, MpvNodeList, MpvNodeUnion
 from core.MpvRenderCtxHandle import MpvRenderCtxHandle
 from core.MpvRenderParam import MpvRenderParam
 from core.PropertyProxy import PropertyProxy
@@ -138,11 +139,6 @@ class MpvEventID(c_int):
 strict_decoder = lambda b: b.decode("utf-8")
 
 
-MpvNode._fields_ = [("val", MpvNodeUnion), ("format", MpvFormat)]
-
-MpvNodeList._fields_ = [("num", c_int), ("values", POINTER(MpvNode)), ("keys", POINTER(c_char_p))]
-
-
 class MpvEvent(Structure):
     _fields_ = [("event_id", MpvEventID), ("error", c_int), ("reply_userdata", c_ulonglong), ("_data", c_void_p)]
 
@@ -215,36 +211,6 @@ class MpvEventEndFile(Structure):
     QUIT = 3
     ERROR = 4
     REDIRECT = 5
-
-
-class MpvEventClientMessage(Structure):
-    _fields_ = [("_num_args", c_int), ("_args", POINTER(c_char_p))]
-
-    @property
-    def args(self):
-        return [self._args[i] for i in range(self._num_args)]
-
-
-class MpvEventCommand(Structure):
-    _fields_ = [("_result", MpvNode)]
-
-    def unpack(self, decoder=identity_decoder):
-        return self._result.node_value(decoder=decoder)
-
-    @property
-    def result(self):
-        return self.unpack()
-
-
-class MpvEventHook(Structure):
-    _fields_ = [
-        ("_name", c_char_p),
-        ("id", c_ulonglong),
-    ]
-
-    @property
-    def name(self):
-        return self._name.decode("utf-8")
 
 
 StreamReadFn = CFUNCTYPE(c_int64, c_void_p, POINTER(c_char), c_uint64)
