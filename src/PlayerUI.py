@@ -11,7 +11,7 @@ class PlayerUI:
 
     def __init__(self):
         self.player = VideoPlayer()
-        self.root = ttk.Window(themename="superhero")
+        self.root = ttk.Window(themename="tokyo-night-dark")
         self.root.title("NamaPlayer")
         self.user_seeking = False
         self.is_fullscreen: bool = False
@@ -43,7 +43,7 @@ class PlayerUI:
         volume_label = ttk.Label(self.control_frame, text="Volume")
         volume_label.pack(side=tk.LEFT, padx=(5, 0), pady=5)
 
-        self.volume_bar = ttk.Scale(self.control_frame, from_=0, to=100, orient=tk.HORIZONTAL, bootstyle="warning")
+        self.volume_bar = ttk.Scale(self.control_frame, from_=0, to=100, orient=tk.HORIZONTAL, bootstyle="warning", length=250)
         self.volume_bar.pack(side=tk.LEFT, padx=5, pady=5)
         self.volume_bar.set(100)
         self.volume_bar.bind("<ButtonRelease-1>", self.on_volume_change)
