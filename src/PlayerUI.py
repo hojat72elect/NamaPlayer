@@ -30,7 +30,7 @@ class PlayerUI:
 
         # This frame will contain control buttons at the bottom of the player
         self.control_frame = ttk.Frame(self.root)
-        self.control_frame.pack(fill=tk.X, side=tk.BOTTOM)
+        self.control_frame.pack(fill=tk.X, side=tk.BOTTOM, padx=20, pady=(20, 20))
 
         self.play_pause_button = ttk.Button(self.control_frame, text="⏸", command=self.toggle_play_pause, width=3, bootstyle="primary")
         self.play_pause_button.pack(side=tk.LEFT, padx=5, pady=5)
