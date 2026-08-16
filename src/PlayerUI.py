@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog
 
+import ttkbootstrap as ttk
+
 from VideoPlayer import VideoPlayer
 
 
@@ -9,7 +11,7 @@ class PlayerUI:
 
     def __init__(self):
         self.player = VideoPlayer()
-        self.root = tk.Tk()
+        self.root = ttk.Window(themename="superhero")
         self.root.title("NamaPlayer")
         self.user_seeking = False
         self.is_fullscreen: bool = False
@@ -22,23 +24,26 @@ class PlayerUI:
         menu_bar.add_cascade(label="Media", menu=media_menu)
 
         # Video will be rendered into this frame
-        self.video_frame = tk.Frame(self.root, width=800, height=600, bg="black")
+        self.video_frame = ttk.Frame(self.root, width=800, height=600)
         self.video_frame.pack(fill=tk.BOTH, expand=True)
         self.video_frame.bind("<Double-Button-1>", self.toggle_fullscreen)
 
         # This frame will contain control buttons at the bottom of the player
-        self.control_frame = tk.Frame(self.root)
+        self.control_frame = ttk.Frame(self.root)
         self.control_frame.pack(fill=tk.X, side=tk.BOTTOM)
 
-        self.play_pause_button = tk.Button(self.control_frame, text="⏸", command=self.toggle_play_pause, width=3)
+        self.play_pause_button = ttk.Button(self.control_frame, text="⏸", command=self.toggle_play_pause, width=3, bootstyle="primary")
         self.play_pause_button.pack(side=tk.LEFT, padx=5, pady=5)
 
-        self.seek_bar = tk.Scale(self.control_frame, from_=0, to=100, orient=tk.HORIZONTAL, showvalue=True)
+        self.seek_bar = ttk.Scale(self.control_frame, from_=0, to=100, orient=tk.HORIZONTAL, bootstyle="info")
         self.seek_bar.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5, pady=5)
         self.seek_bar.bind("<ButtonPress-1>", self.on_seek_start)
         self.seek_bar.bind("<ButtonRelease-1>", self.on_seek_release)
 
-        self.volume_bar = tk.Scale(self.control_frame, from_=0, to=100, orient=tk.HORIZONTAL, showvalue=True, label="Volume")
+        volume_label = ttk.Label(self.control_frame, text="Volume")
+        volume_label.pack(side=tk.LEFT, padx=(5, 0), pady=5)
+
+        self.volume_bar = ttk.Scale(self.control_frame, from_=0, to=100, orient=tk.HORIZONTAL, bootstyle="warning")
         self.volume_bar.pack(side=tk.LEFT, padx=5, pady=5)
         self.volume_bar.set(100)
         self.volume_bar.bind("<ButtonRelease-1>", self.on_volume_change)
