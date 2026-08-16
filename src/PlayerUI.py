@@ -32,11 +32,11 @@ class PlayerUI:
         self.control_frame = ttk.Frame(self.root)
         self.control_frame.pack(fill=tk.X, side=tk.BOTTOM, padx=20, pady=(20, 20))
 
-        self.play_pause_button = ttk.Button(self.control_frame, text="⏸", command=self.toggle_play_pause, width=3, bootstyle="primary")
-        self.play_pause_button.pack(side=tk.LEFT, padx=5, pady=5)
+        self.play_pause_button = ttk.Button(self.control_frame, text="⏸", command=self.toggle_play_pause, width=4, bootstyle="primary")
+        self.play_pause_button.pack(side=tk.LEFT, padx=(0, 10), pady=5)
 
         self.seek_bar = ttk.Scale(self.control_frame, from_=0, to=100, orient=tk.HORIZONTAL, bootstyle="info")
-        self.seek_bar.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5, pady=5)
+        self.seek_bar.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=15, pady=5)
         self.seek_bar.bind("<ButtonPress-1>", self.on_seek_start)
         self.seek_bar.bind("<ButtonRelease-1>", self.on_seek_release)
 
