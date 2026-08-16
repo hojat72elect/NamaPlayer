@@ -22,6 +22,15 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import mpv
+from core.kwargs_to_render_param_array import kwargs_to_render_param_array
+from core.MpvByteArray import MpvByteArray
+from core.MpvEventClientMessage import MpvEventClientMessage
+from core.MpvEventCommand import MpvEventCommand
+from core.MpvEventEndFile import MpvEventEndFile
+from core.MpvEventHook import MpvEventHook
+from core.MpvEventLogMessage import MpvEventLogMessage
+from core.MpvEventProperty import MpvEventProperty
+from core.MpvEventStartFile import MpvEventStartFile
 from core.MpvOpenGLFBO import MpvOpenGLFBO
 from core.MpvRenderFrameInfo import MpvRenderFrameInfo
 
@@ -281,13 +290,13 @@ class TestMpvByteArray:
     def test_init(self):
         """Test initialization."""
         data = b"test data"
-        byte_array = mpv.MpvByteArray(data)
+        byte_array = MpvByteArray(data)
         assert byte_array.size == len(data)
 
     def test_bytes_value(self):
         """Test bytes_value method."""
         data = b"test data"
-        byte_array = mpv.MpvByteArray(data)
+        byte_array = MpvByteArray(data)
         result = byte_array.bytes_value()
         assert result == data
 
@@ -297,7 +306,7 @@ class TestMpvEventProperty:
 
     def test_name_property(self):
         """Test name property decoding."""
-        event = mpv.MpvEventProperty()
+        event = MpvEventProperty()
         event._name = b"test_property"
         assert event.name == "test_property"
 
@@ -307,25 +316,25 @@ class TestMpvEventLogMessage:
 
     def test_prefix_property(self):
         """Test prefix property decoding."""
-        event = mpv.MpvEventLogMessage()
+        event = MpvEventLogMessage()
         event._prefix = b"cplayer"
         assert event.prefix == "cplayer"
 
     def test_level_property(self):
         """Test level property decoding."""
-        event = mpv.MpvEventLogMessage()
+        event = MpvEventLogMessage()
         event._level = b"info"
         assert event.level == "info"
 
     def test_text_property(self):
         """Test text property decoding."""
-        event = mpv.MpvEventLogMessage()
+        event = MpvEventLogMessage()
         event._text = b"test message"
         assert event.text == "test message"
 
     def test_text_property_unicode(self):
         """Test text property with unicode."""
-        event = mpv.MpvEventLogMessage()
+        event = MpvEventLogMessage()
         event._text = "test message".encode("utf-8")
         assert event.text == "test message"
 
@@ -335,12 +344,12 @@ class TestMpvEventEndFile:
 
     def test_constants(self):
         """Test end file reason constants."""
-        assert mpv.MpvEventEndFile.EOF == 0
-        assert mpv.MpvEventEndFile.RESTARTED == 1
-        assert mpv.MpvEventEndFile.ABORTED == 2
-        assert mpv.MpvEventEndFile.QUIT == 3
-        assert mpv.MpvEventEndFile.ERROR == 4
-        assert mpv.MpvEventEndFile.REDIRECT == 5
+        assert MpvEventEndFile.EOF == 0
+        assert MpvEventEndFile.RESTARTED == 1
+        assert MpvEventEndFile.ABORTED == 2
+        assert MpvEventEndFile.QUIT == 3
+        assert MpvEventEndFile.ERROR == 4
+        assert MpvEventEndFile.REDIRECT == 5
 
 
 class TestMpvEventStartFile:
@@ -348,7 +357,7 @@ class TestMpvEventStartFile:
 
     def test_playlist_entry_id(self):
         """Test playlist_entry_id attribute."""
-        event = mpv.MpvEventStartFile()
+        event = MpvEventStartFile()
         event.playlist_entry_id = 123
         assert event.playlist_entry_id == 123
 
@@ -358,7 +367,7 @@ class TestMpvEventClientMessage:
 
     def test_args_property(self):
         """Test args property."""
-        event = mpv.MpvEventClientMessage()
+        event = MpvEventClientMessage()
         event._num_args = 3
         args = [c_char_p(b"arg1"), c_char_p(b"arg2"), c_char_p(b"arg3")]
         event._args = (c_char_p * 3)(*args)
@@ -371,7 +380,7 @@ class TestMpvEventCommand:
 
     def test_result_property(self):
         """Test result property."""
-        event = mpv.MpvEventCommand()
+        event = MpvEventCommand()
         event._result = mpv.MpvNode()
         event._result.format = mpv.MpvFormat(mpv.MpvFormat.STRING)
         event._result.val.string = b"result"
@@ -383,13 +392,13 @@ class TestMpvEventHook:
 
     def test_name_property(self):
         """Test name property decoding."""
-        event = mpv.MpvEventHook()
+        event = MpvEventHook()
         event._name = b"test_hook"
         assert event.name == "test_hook"
 
     def test_id_property(self):
         """Test id property."""
-        event = mpv.MpvEventHook()
+        event = MpvEventHook()
         event.id = 123
         assert event.id == 123
 
@@ -666,7 +675,7 @@ class TestMpvRenderParamArray:
         """Test converting kwargs to render param array - simplified."""
         # Test with simple boolean parameter that works
         kwargs = {"flip_y": True}
-        result = mpv.kwargs_to_render_param_array(kwargs)
+        result = kwargs_to_render_param_array(kwargs)
         assert len(result) == 2  # 1 param + 1 invalid terminator
 
 
